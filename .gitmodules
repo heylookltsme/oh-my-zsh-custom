@@ -1,3 +1,6 @@
 [submodule "plugins/jira"]
 	path = plugins/jira
 	url = git@github.com:heylookltsme/jira.plugin.zsh.git
+[submodule "themes/powerlevel10k"]
+	path = themes/powerlevel10k
+	url = https://github.com/romkatv/powerlevel10k.git
