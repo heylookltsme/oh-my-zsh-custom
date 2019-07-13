@@ -1,0 +1,3 @@
+[submodule "plugins/jira"]
+	path = plugins/jira
+	url = git@github.com:heylookltsme/jira.plugin.zsh.git
