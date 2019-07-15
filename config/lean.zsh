@@ -12,8 +12,10 @@ fi
   # The list of segments shown on the left. Fill it with the most important segments.
   typeset -ga POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
       # Line #1
+      time         # current time
+      context      # user@host
       dir          # current directory
-      vcs          # git status
+      vcs
       # Line #2
       newline
       prompt_char  # prompt symbol
@@ -24,6 +26,7 @@ fi
   # automatically hidden when the input line reaches it. Right prompt above the
   # last prompt line gets hidden if it would overlap with left prompt.
   typeset -ga POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(
+      # vcs          # git status
       status                  # exit code of the last command
       command_execution_time  # duration of the last command
       background_jobs         # presence of background jobs
@@ -31,7 +34,7 @@ fi
       # anaconda              # conda environment (https://conda.io/)
       # pyenv                 # python environment (https://github.com/pyenv/pyenv)
       # kubecontext           # current kubernetes context (https://kubernetes.io/)
-      context                 # user@host
+      # context                 # user@host
       # time                  # current time
   )
 
@@ -51,11 +54,11 @@ fi
 
   # Add an empty line before each prompt. If you set it to false, you might want to
   # set POWERLEVEL9K_SHOW_RULER to true below.
-  typeset -g POWERLEVEL9K_PROMPT_ADD_NEWLINE=true
+  typeset -g POWERLEVEL9K_PROMPT_ADD_NEWLINE=false
 
   # Ruler, a.k.a. the horizontal line before each prompt. If you set it to true, you'll
   # probably want to set POWERLEVEL9K_PROMPT_ADD_NEWLINE to false above.
-  typeset -g POWERLEVEL9K_SHOW_RULER=false
+  typeset -g POWERLEVEL9K_SHOW_RULER=true
   typeset -g POWERLEVEL9K_RULER_CHAR='─'
   typeset -g POWERLEVEL9K_RULER_FOREGROUND=237
 
@@ -64,7 +67,9 @@ fi
   # Red prompt symbol if the last command failed.
   typeset -g POWERLEVEL9K_PROMPT_CHAR_ERROR_{VIINS,VICMD,VIVIS}_FOREGROUND=196
   # Default prompt symbol.
-  typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VIINS_CONTENT_EXPANSION='❯ '
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_VIINS_CONTENT_EXPANSION='✨ '
+  # Error prompt symbol
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_ERROR_VIINS_CONTENT_EXPANSION='❗'
   # Prompt symbol in command vi mode.
   typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VICMD_CONTENT_EXPANSION='❮ '
   # Prompt symbol in visual vi mode.
@@ -74,7 +79,7 @@ fi
   # POWERLEVEL9K_DIR_NOT_WRITABLE_FOREGROUND defined below won't have effect.
   typeset -g POWERLEVEL9K_DIR_SHOW_WRITABLE=true
   # Default current directory color.
-  typeset -g POWERLEVEL9K_DIR_FOREGROUND=39
+  typeset -g POWERLEVEL9K_DIR_FOREGROUND="yellow"
   # Directory color if it isn't writable.
   typeset -g POWERLEVEL9K_DIR_NOT_WRITABLE_FOREGROUND=209
   # If set to true, embed a hyperlink into the directory. Useful for quickly
@@ -87,31 +92,8 @@ fi
   # We are using parameters defined by the gitstatus plugin. See reference:
   # https://github.com/romkatv/gitstatus/blob/master/gitstatus.plugin.zsh.
   local vcs=''
-  # 'feature' or '@72f5c8a' if not on a branch.
-  vcs+='%76F${${VCS_STATUS_LOCAL_BRANCH//\%/%%}:-%f@%76F${VCS_STATUS_COMMIT[1,8]}}'
-  # ':master' if the tracking branch name differs from local branch.
-  vcs+='${${VCS_STATUS_REMOTE_BRANCH:#$VCS_STATUS_LOCAL_BRANCH}:+%f:%76F${VCS_STATUS_REMOTE_BRANCH//\%/%%}}'
-  # '#tag' if on a tag.
-  vcs+='${VCS_STATUS_TAG:+%f#%76F${VCS_STATUS_TAG//\%/%%}}'
-  # ⇣42 if behind the remote.
-  vcs+='${${VCS_STATUS_COMMITS_BEHIND:#0}:+ %76F⇣${VCS_STATUS_COMMITS_BEHIND}}'
-  # ⇡42 if ahead of the remote; no leading space if also behind the remote: ⇣42⇡42.
-  # If you want '⇣42 ⇡42' instead, replace '${${(M)VCS_STATUS_COMMITS_BEHIND:#0}:+ }' with ' '.
-  vcs+='${${VCS_STATUS_COMMITS_AHEAD:#0}:+${${(M)VCS_STATUS_COMMITS_BEHIND:#0}:+ }%76F⇡${VCS_STATUS_COMMITS_AHEAD}}'
-  # *42 if have stashes.
-  vcs+='${${VCS_STATUS_STASHES:#0}:+ %76F*${VCS_STATUS_STASHES}}'
-  # 'merge' if the repo is in an unusual state.
-  vcs+='${VCS_STATUS_ACTION:+ %196F${VCS_STATUS_ACTION//\%/%%}}'
-  # ~42 if have merge conflicts.
-  vcs+='${${VCS_STATUS_NUM_CONFLICTED:#0}:+ %196F~${VCS_STATUS_NUM_CONFLICTED}}'
-  # +42 if have staged changes.
-  vcs+='${${VCS_STATUS_NUM_STAGED:#0}:+ %11F+${VCS_STATUS_NUM_STAGED}}'
-  # !42 if have unstaged changes.
-  vcs+='${${VCS_STATUS_NUM_UNSTAGED:#0}:+ %11F!${VCS_STATUS_NUM_UNSTAGED}}'
-  # ?42 if have untracked files.
-  vcs+='${${VCS_STATUS_NUM_UNTRACKED:#0}:+ %12F?${VCS_STATUS_NUM_UNTRACKED}}'
-  # If P9K_CONTENT is not empty, leave it unchanged. It's either "loading" or from vcs_info.
-  vcs="\${P9K_CONTENT:-$vcs}"
+  source $ZSH_CUSTOM/config/gitstatus.prompt.zsh
+  vcs+='$GITSTATUS_PROMPT'
 
   # Disable the default Git status formatting.
   typeset -g POWERLEVEL9K_VCS_DISABLE_GITSTATUS_FORMATTING=true
@@ -160,14 +142,15 @@ fi
   typeset -g POWERLEVEL9K_BACKGROUND_JOBS_VISUAL_IDENTIFIER_COLOR=2
 
   # Context format: user@host.
-  typeset -g POWERLEVEL9K_CONTEXT_TEMPLATE='%n@%m'
+  # typeset -g POWERLEVEL9K_CONTEXT_TEMPLATE='%n@%m'
+  typeset -g POWERLEVEL9K_CONTEXT_TEMPLATE="%F{"cyan"}%n%F{"white"}@%F{"063"}%m"
   # Default context color.
   typeset -g POWERLEVEL9K_CONTEXT_FOREGROUND=244
   # Context color when running with privileges.
   typeset -g POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND=11
   # Don't show context unless running with privileges on via SSH.
-  typeset -g POWERLEVEL9K_CONTEXT_{DEFAULT,SUDO}_CONTENT_EXPANSION=
-  typeset -g POWERLEVEL9K_ALWAYS_SHOW_CONTEXT=true
+  # typeset -g POWERLEVEL9K_CONTEXT_{DEFAULT,SUDO}_CONTENT_EXPANSION=
+  # typeset -g POWERLEVEL9K_ALWAYS_SHOW_CONTEXT=true
 
   # Python virtual environment color.
   typeset -g POWERLEVEL9K_VIRTUALENV_FOREGROUND=6
@@ -219,7 +202,7 @@ fi
   typeset -g POWERLEVEL9K_KUBECONTEXT_SHOW_DEFAULT_NAMESPACE=true
 
   # Current time color.
-  typeset -g POWERLEVEL9K_TIME_FOREGROUND=66
+  typeset -g POWERLEVEL9K_TIME_FOREGROUND=242
   # Format for the current time: 09:51:02. See `man 3 strftime`.
   typeset -g POWERLEVEL9K_TIME_FORMAT='%D{%H:%M:%S}'
 }
